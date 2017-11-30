@@ -5,4 +5,18 @@
 }
 
 .slider {
+    position: relative;
+    background-color: #cacbcc;
+    margin: 15px 10px;
+}
+
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    left: 0;
+    border-radius: 50% 50%;
+    background-color: #EDEEEE;
+    transform: translateY(-50%);
 }

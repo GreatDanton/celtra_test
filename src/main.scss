@@ -7,16 +7,16 @@
 .slider {
     position: relative;
     background-color: #cacbcc;
-    margin: 15px 10px;
+    margin: 15px 20px;
 }
 
 .slider-btn {
     position: absolute;
     top: 50%;
-    width: 20px;
-    height: 20px;
-    left: 0;
+    width: 30px;
+    height: 30px;
+    left: -15px;
     border-radius: 50% 50%;
-    background-color: #EDEEEE;
+    background-color: #FAFAFA;
     transform: translateY(-50%);
 }

@@ -14,17 +14,18 @@ class Slider {
         this.maxVal = range[1];
         this.step = step;
         this.radius = radius;
+        this.width = radius; // just for straight slider prototype
 
         // variable that is used to determine wheter the slider is being dragged
         this.drag = false;
         // slider default value on init
         this.sliderValue = 0;
-        // current x position of slider button
-        this.currentXPos = 0;
-        // number of chunks
+        // maximum number of steps
         this.numOfSteps = Math.round(this.maxVal / step);
         // step width in pixels
         this.stepWidth = radius / this.numOfSteps;
+        // for calculating price based on the slider button position
+        this.pricePerPixel = (this.maxVal - this.minVal) / this.width;
 
         this.slider = this.createSlider();
         this.container.appendChild(this.slider);
@@ -35,7 +36,7 @@ class Slider {
         // whole slider container
         let newSlider = document.createElement("div");
         newSlider.className = "slider";
-        let style = `height: 10px; width: ${this.radius}px; background-color: ${this.color}`;
+        let style = `height: 20px; width: ${this.radius}px; background-color: ${this.color}`;
         newSlider.setAttribute("style", style); // set element style
 
         // slider touch button
@@ -76,45 +77,57 @@ class Slider {
 
     sliderMove(e) {
         e.preventDefault();
-        if (this.drag) {
-            let sliderPosition = this.slider.getBoundingClientRect().x;
-            let mouseX;
-            if (e.type == "mousemove" || e.type == "mousedown") {
-                mouseX = e.clientX;
-            } else {
-                mouseX = e.changedTouches[0].clientX;
-            }
-
-            // position of slider btn in px (where it should be)
-            let sliderBtnPosition = mouseX - sliderPosition;
-            let currentSteps = Math.floor(sliderBtnPosition / this.stepWidth);
-
-            let finalBtnPos = Math.floor(currentSteps * this.stepWidth);
-            let price = finalBtnPos;
-
-            if (finalBtnPos < 0) {
-                finalBtnPos = 0;
-                price = 0;
-            } else if (finalBtnPos > this.radius - 20) { // we treat radius as width for now
-                // 20 is width of the slider button (so it does not overflow slider path)
-                finalBtnPos = this.radius - 20;
-            }
-
-            // move slide button to correct position
-            let btn;
-            // if slider background is clicked, parse child slide button
-            if (e.target.classList[0] == "slider") {
-                btn = e.target.firstElementChild;
-            } else { // the actual slide button is dragged
-                btn = e.target;
-            }
-
-            btn.style.left = `${finalBtnPos}px`;
-            if (price > this.radius) {
-                price = this.radius;
-            }
-            console.log("Price: " + price);
+        // if drag != true early escape
+        if (!this.drag) {
+            return;
         }
+
+        let sliderContainerPos = this.slider.getBoundingClientRect().x;
+        // detect mouse or touch x coordinates
+        let mouseX;
+        if (e.type == "mousemove" || e.type == "mousedown") {
+            mouseX = e.clientX;
+        } else {
+            mouseX = e.changedTouches[0].clientX;
+        }
+
+        // position of slider btn in px (where it should be)
+        let sliderBtnPosition = mouseX - sliderContainerPos;
+        // lines below create sticky feeling for slider button. Slider sticks
+        // to the step ticks
+        let currentSteps = Math.round(sliderBtnPosition / this.stepWidth);
+        let finalBtnPos = Math.round(currentSteps * this.stepWidth);
+
+        // prevents slider button overflowing slider container
+        if (finalBtnPos > this.width) {
+            finalBtnPos = this.width
+        } else if (finalBtnPos < 0) {
+            finalBtnPos = 0;
+        }
+
+        let price = this.calculatePrice(finalBtnPos);
+        console.log("Price: " + price);
+
+        let btn;
+        // if slider background is clicked, parse child element => slider button
+        if (e.target.classList[0] == "slider") {
+            btn = e.target.firstElementChild;
+        } else { // the actual slider button is dragged
+            btn = e.target;
+        }
+
+        // we are using transform translate because it has better performance than
+        // changing coordinates of plain element.style.left
+        let prevPos = btn.style.left;
+        let newPos = finalBtnPos;
+        let diff = newPos - prevPos;
+        btn.style.transform = `translate(${diff}px, -50%)`;
+    }
+
+    // calculate price from slider button position
+    calculatePrice(btnPosition) {
+        let price = btnPosition * this.pricePerPixel + this.minVal;
+        return Math.round(price);
     }
 }
 

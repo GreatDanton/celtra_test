@@ -7,7 +7,8 @@ class Slider {
     // range - [min value, max value]
     // step - integer (1)
     // radius - in px; integer
-    constructor(container, color, range, step, radius) {
+    // description - text that will be shown in details on the left of the slider
+    constructor(container, color, range, step, radius, description) {
         this.container = container;
         this.color = color;
         this.minVal = range[0];
@@ -15,6 +16,8 @@ class Slider {
         this.step = step;
         this.radius = radius;
         this.width = radius; // just for straight slider prototype
+        // description text for slider details/counter
+        this.description = description;
 
         // variable that is used to determine wheter the slider is being dragged
         this.drag = false;
@@ -27,8 +30,46 @@ class Slider {
         // for calculating price based on the slider button position
         this.pricePerPixel = (this.maxVal - this.minVal) / this.width;
 
+        // create slider and it's details/counter part
         this.slider = this.createSlider();
-        this.container.appendChild(this.slider);
+        this.sliderDetails = new sliderDetails(this.sliderValue, this.color, this.description);
+
+        // add slider to specified container in constructor
+        addSlider();
+    }
+
+    // addSlider inserts slider and detail (counter) to this.container specified in constructor
+    // with custom div parent elements used for styling
+    addSlider() {
+        // if we are importing slider component inside container for the first time, we
+        // would like to add slider-details and slider-placeholder dom elements first.
+        if (this.container.childElementCount == 0) {
+            let sliderContainer = document.createElement("div");
+            sliderContainer.className = "slider-container";
+
+            let detailsPlaceholder = document.createElement("div");
+            detailsPlaceholder.className = "slider-detailsPlaceholder";
+
+            let sliderPlaceholder = document.createElement("div");
+            sliderPlaceholder.className = "slider-placeholder";
+
+            sliderContainer.appendChild(detailsPlaceholder);
+            sliderContainer.appendChild(sliderPlaceholder);
+            this.container.appendChild(sliderContainer);
+        }
+
+        let sliderContainer = this.container.childNodes[0];
+        let childElements = sliderContainer.childNodes;
+
+        // append slider and details counter dom elements inside correct containers
+        for (var i = 0; i < childElements.length; i++) {
+            let el = childNodes[i];
+            if (el.className == "slider-detailsPlaceholder") {
+                el.appendChild(this.sliderDetails.createElement());
+            } else if (el.className == "slider-placeholder") {
+                el.appendChild(this.slider);
+            }
+        }
     }
 
     // create slider dom element
@@ -36,7 +77,7 @@ class Slider {
         // whole slider container
         let newSlider = document.createElement("div");
         newSlider.className = "slider";
-        let style = `height: 20px; width: ${this.radius}px; background-color: ${this.color}`;
+        let style = `height: 25px; width: ${this.radius}px; background-color: ${this.color}`;
         newSlider.setAttribute("style", style); // set element style
 
         // slider touch button
@@ -105,8 +146,9 @@ class Slider {
             finalBtnPos = 0;
         }
 
+        // calculating price and updating details part
         let price = this.calculatePrice(finalBtnPos);
-        console.log("Price: " + price);
+        this.sliderDetails.setPrice(price);
 
         let btn;
         // if slider background is clicked, parse child element => slider button
@@ -131,7 +173,55 @@ class Slider {
     }
 }
 
+
+class sliderDetails {
+    // price - int
+    // color - #hexNum
+    // description - string (ie: Transportation)
+    constructor(price, color, description) {
+        this.price = price;
+        this.color = color;
+        this.description = description;
+
+        // var that holds price h1 dom element so we can change it later via function
+        this.priceElement;
+    }
+
+    // create dom element with data from constructor arguments
+    createElement() {
+        let sliderDetails = document.createElement("div");
+        sliderDetails.className = "row";
+
+        let price = document.createElement("h2");
+        price.innerHTML = "$" + this.price;
+        this.priceElement = price;
+
+        let backgroundColor = document.createElement("div");
+        backgroundColor.className = "slider-details-background"
+        backgroundColor.style.backgroundColor = this.color;
+
+        let description = document.createElement("p");
+        description.className = "description";
+        description.innerHTML = this.description;
+
+        sliderDetails.appendChild(price);
+        sliderDetails.appendChild(backgroundColor);
+        sliderDetails.appendChild(description);
+
+        return sliderDetails;
+    }
+
+    // call setPrice() on class instance to change value of
+    // h1 price html tag
+    setPrice(price) {
+        this.price = price;
+        this.priceElement.innerHTML = "$" + this.price;
+    }
+}
+
 let container = document.getElementById("slider-test");
-let slider1 = new Slider(container, "#CACBCC", [0, 360], 1, 150);
-let slider2 = new Slider(container, "#313131", [0, 360], 10, 200);
-let slider3 = new Slider(container, "#d3d3d3", [0, 360], 36, 300);
+let slider1 = new Slider(container, "#70508F", [0, 360], 1, 150, "Transportation");
+let slider2 = new Slider(container, "#1D8FC4", [0, 360], 10, 200, "Food");
+let slider3 = new Slider(container, "#609F36", [0, 360], 36, 300, "Insurance");
+let slider4 = new Slider(container, "#DD8F2E", [0, 360], 100, 300, "Entertainment");
+let slider5 = new Slider(container, "#DA5648", [0, 360], 36, 300, "Health care");

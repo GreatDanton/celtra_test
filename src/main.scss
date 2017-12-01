@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+body {
+    font-family: "Liberation Sans", sans-serif;
+}
+
 .slider {
     position: relative;
     background-color: #cacbcc;
@@ -23,9 +27,34 @@
 
 .slider-row {
     display: flex;
+    align-items: flex-end;
+    padding: 2px 0;
+
+    h2 {
+        min-width: 120px;
+        font-size: 50px;
+        /* magic numbers so the font aligns as requested */
+        height: 40px;
+        line-height: 50px;
+    }
+
+    .slider-background {
+        width: 16px;
+        height: 11px;
+        margin: 0 15px;
+    }
+
+    p {
+        font-size: 12px;
+    }
 }
 
 
 .slider-container {
     display: flex;
+    align-items: center;
+}
+
+.slider-details {
+    align-items: center;
 }

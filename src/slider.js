@@ -35,7 +35,7 @@ class Slider {
         this.sliderDetails = new sliderDetails(this.sliderValue, this.color, this.description);
 
         // add slider to specified container in constructor
-        addSlider();
+        this.addSlider();
     }
 
     // addSlider inserts slider and detail (counter) to this.container specified in constructor
@@ -63,7 +63,7 @@ class Slider {
 
         // append slider and details counter dom elements inside correct containers
         for (var i = 0; i < childElements.length; i++) {
-            let el = childNodes[i];
+            let el = childElements[i];
             if (el.className == "slider-detailsPlaceholder") {
                 el.appendChild(this.sliderDetails.createElement());
             } else if (el.className == "slider-placeholder") {
@@ -190,18 +190,17 @@ class sliderDetails {
     // create dom element with data from constructor arguments
     createElement() {
         let sliderDetails = document.createElement("div");
-        sliderDetails.className = "row";
+        sliderDetails.className = "slider-row";
 
         let price = document.createElement("h2");
         price.innerHTML = "$" + this.price;
         this.priceElement = price;
 
         let backgroundColor = document.createElement("div");
-        backgroundColor.className = "slider-details-background"
+        backgroundColor.className = "slider-background"
         backgroundColor.style.backgroundColor = this.color;
 
         let description = document.createElement("p");
-        description.className = "description";
         description.innerHTML = this.description;
 
         sliderDetails.appendChild(price);
@@ -220,8 +219,8 @@ class sliderDetails {
 }
 
 let container = document.getElementById("slider-test");
-let slider1 = new Slider(container, "#70508F", [0, 360], 1, 150, "Transportation");
-let slider2 = new Slider(container, "#1D8FC4", [0, 360], 10, 200, "Food");
-let slider3 = new Slider(container, "#609F36", [0, 360], 36, 300, "Insurance");
-let slider4 = new Slider(container, "#DD8F2E", [0, 360], 100, 300, "Entertainment");
-let slider5 = new Slider(container, "#DA5648", [0, 360], 36, 300, "Health care");
+let slider1 = new Slider(container, "#70508F", [0, 1000], 1, 300, "Transportation");
+let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 300, "Food");
+let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 300, "Insurance");
+let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 100, 300, "Entertainment");
+let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 300, "Health care");

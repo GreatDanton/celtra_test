@@ -15,27 +15,35 @@ class Slider {
         this.maxVal = range[1];
         this.step = step;
         this.radius = radius;
-        this.width = radius; // just for straight slider prototype
         // description text for slider details/counter
         this.description = description;
 
         // variable that is used to determine wheter the slider is being dragged
         this.drag = false;
-        // slider default value on init
-        this.sliderValue = 0;
         // maximum number of steps
-        this.numOfSteps = Math.round(this.maxVal / step);
-        // step width in pixels
-        this.stepWidth = radius / this.numOfSteps;
-        // for calculating price based on the slider button position
-        this.pricePerPixel = (this.maxVal - this.minVal) / this.width;
+        this.numOfSteps = Math.round((this.maxVal - this.minVal) / step);
+        // how many degrees are in one angle
+        this.stepAngle = 360 / this.numOfSteps;
 
-        // create slider and it's details/counter part
-        this.slider = this.createSlider();
-        this.sliderDetails = new sliderDetails(this.sliderValue, this.color, this.description);
+        // slider default price when the slider component mounts
+        this.price = this.minVal;
+        // Used for calculating price based on the slider button position
+        this.pricePerStep = (this.maxVal - this.minVal) / this.numOfSteps;
+
+        // sliderRing and sliderBtn are set up while constructing slider svg
+        // they hold sliderRing and sliderBtn svg element for this class so we
+        // can simply use them for calculations across Slider class
+        this.sliderRing;
+        this.sliderBtn;
+
+        // create slider and it's details/(price counter) part
+        this.svgContainer = this.createSlider();
+        // slider details (price counter) element
+        this.sliderDetails = new sliderDetails(this.price, this.color, this.description);
 
         // add slider to specified container in constructor
-        this.addSlider();
+        //this.addSlider();
+        this.container.appendChild(this.svgContainer);
     }
 
     // addSlider inserts slider and detail (counter) to this.container specified in constructor
@@ -62,44 +70,78 @@ class Slider {
         let childElements = sliderContainer.childNodes;
 
         // append slider and details counter dom elements inside correct containers
-        for (var i = 0; i < childElements.length; i++) {
+        for (let i = 0; i < childElements.length; i++) {
             let el = childElements[i];
             if (el.className == "slider-detailsPlaceholder") {
                 el.appendChild(this.sliderDetails.createElement());
             } else if (el.className == "slider-placeholder") {
-                el.appendChild(this.slider);
+                let placeholderWidth = el.getBoundingClientRect().width;
+
+                if (this.radius > placeholderWidth) {
+                    el.style.width = 2 * this.radius + "px";
+                    el.style.height = 2 * this.radius + "px";
+                }
+                let positionContainer = document.createElement("div");
+                positionContainer.className = "slider-position-container";
+                positionContainer.appendChild(this.svgContainer);
+                el.appendChild(positionContainer);
             }
         }
     }
 
     // create slider dom element
     createSlider() {
-        // whole slider container
-        let newSlider = document.createElement("div");
-        newSlider.className = "slider";
-        let style = `height: 25px; width: ${this.radius}px; background-color: ${this.color}`;
-        newSlider.setAttribute("style", style); // set element style
+        let strokeWidth = 20;
+        let sliderWidth = 30;
+        let width = 2 * this.radius + strokeWidth + sliderWidth;
+
+        let svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgContainer.setAttributeNS(null, "version", "1.1");
+        svgContainer.setAttributeNS(null, "viewBox", `${(-strokeWidth - sliderWidth) / 2} ${(-strokeWidth - sliderWidth) / 2} ${width} ${width}`);
+        svgContainer.setAttributeNS(null, "width", width);
+        svgContainer.setAttributeNS(null, "height", width);
+
+        let sliderRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        sliderRing.setAttributeNS(null, "r", this.radius);
+        sliderRing.setAttributeNS(null, "stroke-width", strokeWidth);
+        sliderRing.setAttributeNS(null, "cx", this.radius);
+        sliderRing.setAttributeNS(null, "cy", this.radius);
+        sliderRing.setAttributeNS(null, "fill-opacity", 0);
+        sliderRing.setAttributeNS(null, "class", "slider-ring");
+
+        let emptyChunkSize = 2;
+        let fullChunkSize = (2 * Math.PI * this.radius - emptyChunkSize * this.numOfSteps) / this.numOfSteps;
+        sliderRing.setAttributeNS(null, "stroke-dasharray", `${fullChunkSize}, ${emptyChunkSize}`);
+        this.sliderRing = sliderRing;
+
+        svgContainer.appendChild(sliderRing);
 
         // slider touch button
-        let sliderBtn = document.createElement("div")
-        sliderBtn.className = "slider-btn";
-        sliderBtn.setAttribute("style", `border: 1px solid ${this.color}`);
-        newSlider.appendChild(sliderBtn);
+        let sliderBtn = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        sliderBtn.setAttributeNS(null, "r", 13);
+        sliderBtn.setAttributeNS(null, "stroke-width", 1);
+        sliderBtn.setAttributeNS(null, "stroke", this.color);
+        sliderBtn.setAttributeNS(null, "fill", "#fafafa");
+        sliderBtn.setAttributeNS(null, "cx", this.radius);
+        sliderBtn.setAttributeNS(null, "cy", 0);
+        sliderBtn.setAttributeNS(null, "class", "slider-btn");
+        this.sliderBtn = sliderBtn;
+        svgContainer.appendChild(sliderBtn);
 
-        newSlider.addEventListener("touchstart", this.sliderTouchStart.bind(this));
-        newSlider.addEventListener("touchend", this.sliderTouchEnd.bind(this));
-        newSlider.addEventListener("touchmove", this.sliderMove.bind(this));
+        svgContainer.addEventListener("touchstart", this.sliderTouchStart.bind(this));
+        svgContainer.addEventListener("touchend", this.sliderTouchEnd.bind(this));
+        svgContainer.addEventListener("touchmove", this.sliderMove.bind(this));
 
-        newSlider.addEventListener("mousedown", this.sliderTouchStart.bind(this));
-        newSlider.addEventListener("mouseup", this.sliderTouchEnd.bind(this));
-        newSlider.addEventListener("mousemove", this.sliderMove.bind(this));
+        svgContainer.addEventListener("mousedown", this.sliderTouchStart.bind(this));
+        svgContainer.addEventListener("mouseup", this.sliderTouchEnd.bind(this));
+        svgContainer.addEventListener("mousemove", this.sliderMove.bind(this));
 
         // disable right click popup when long touch occurs
-        newSlider.addEventListener("contextmenu", (e) => {
+        svgContainer.addEventListener("contextmenu", (e) => {
             e.preventDefault();
         });
 
-        return newSlider;
+        return svgContainer;
     }
 
     sliderTouchStart(e) {
@@ -122,54 +164,68 @@ class Slider {
         if (!this.drag) {
             return;
         }
-
-        let sliderContainerPos = this.slider.getBoundingClientRect().x;
-        // detect mouse or touch x coordinates
-        let mouseX;
+        // detect mouse or touch global x,y coordinates
+        let clickX;
+        let clickY;
         if (e.type == "mousemove" || e.type == "mousedown") {
-            mouseX = e.clientX;
+            clickX = e.clientX;
+            clickY = e.clientY;
         } else {
-            mouseX = e.changedTouches[0].clientX;
+            clickX = e.changedTouches[0].clientX;
+            clickY = e.changedTouches[0].clientY;
         }
 
-        // position of slider btn in px (where it should be)
-        let sliderBtnPosition = mouseX - sliderContainerPos;
-        // lines below create sticky feeling for slider button. Slider sticks
-        // to the step ticks
-        let currentSteps = Math.round(sliderBtnPosition / this.stepWidth);
-        let finalBtnPos = Math.round(currentSteps * this.stepWidth);
+        let newAngle = this.calcAngle(clickX, clickY);
+        // create sticky feeling => slider sticks to slider ring ticks/steps
+        let steps = Math.round(newAngle / this.stepAngle);
+        let finalAngle = Math.round(steps * this.stepAngle);
 
-        // prevents slider button overflowing slider container
-        if (finalBtnPos > this.width) {
-            finalBtnPos = this.width
-        } else if (finalBtnPos < 0) {
-            finalBtnPos = 0;
-        }
+        // calculate new price based on the angle
+        let newPrice = this.calculatePrice(finalAngle);
+        this.price = newPrice;
 
-        // calculating price and updating details part
-        let price = this.calculatePrice(finalBtnPos);
-        this.sliderDetails.setPrice(price);
 
-        let btn;
-        // if slider background is clicked, parse child element => slider button
-        if (e.target.classList[0] == "slider") {
-            btn = e.target.firstElementChild;
-        } else { // the actual slider button is dragged
-            btn = e.target;
-        }
+        let newBtnPosition = this.calcNewPoints(finalAngle);
+        let newX = newBtnPosition[0] + this.radius;
+        let newY = newBtnPosition[1] + this.radius;
 
-        // we are using transform translate because it has better performance than
-        // changing coordinates of plain element.style.left
-        let prevPos = btn.style.left;
-        let newPos = finalBtnPos;
-        let diff = newPos - prevPos;
-        btn.style.transform = `translate(${diff}px, -50%)`;
+        this.sliderBtn.setAttributeNS(null, "cx", newX);
+        this.sliderBtn.setAttributeNS(null, "cy", newY);
     }
 
     // calculate price from slider button position
-    calculatePrice(btnPosition) {
-        let price = btnPosition * this.pricePerPixel + this.minVal;
-        return Math.round(price);
+    calculatePrice(angle) {
+        let steps = Math.round(angle / this.stepAngle);
+        let price = steps * this.pricePerStep;
+        return price;
+    }
+
+    // calculate angle between (pointX, pointY), center point of the
+    // ringSlider (circle) and top most point which represent 0 degrees.
+    // We are using polar coordinate system to calculate the angle between the points
+    calcAngle(pointX, pointY) {
+        let dimensions = this.sliderRing.getBoundingClientRect();
+        let cx = dimensions.left + (dimensions.width / 2);
+        let cy = dimensions.top + (dimensions.height / 2);
+
+        let dx = pointX - cx;
+        let dy = pointY - cy;
+        // returns angle in degrees. + 90 is added to rotate coordinate system
+        // so 0deg angle is at the top of the circle.
+        let deg = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+        if (deg < 0) {
+            deg += 360;
+        }
+        return deg;
+    }
+
+    // calculate new [x,y] points for sliderBtn based on the inserted angle in degrees
+    calcNewPoints(angle) {
+        // rotate coordinate system so 0deg angle is at the top of the circle (ringSlider);
+        angle -= 90;
+        let x = this.radius * Math.cos(angle * Math.PI / 180);
+        let y = this.radius * Math.sin(angle * Math.PI / 180);
+        return [x, y];
     }
 }
 
@@ -210,8 +266,7 @@ class sliderDetails {
         return sliderDetails;
     }
 
-    // call setPrice() on class instance to change value of
-    // h1 price html tag
+    // call setPrice() on class instance to change value of h1 price html tag
     setPrice(price) {
         this.price = price;
         this.priceElement.innerHTML = "$" + this.price;
@@ -219,8 +274,8 @@ class sliderDetails {
 }
 
 let container = document.getElementById("slider-test");
-let slider1 = new Slider(container, "#70508F", [0, 1000], 1, 300, "Transportation");
-let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 300, "Food");
-let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 300, "Insurance");
-let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 100, 300, "Entertainment");
-let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 300, "Health care");
+let slider1 = new Slider(container, "#70508F", [0, 1000], 50, 100, "Transportation");
+let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 180, "Food");
+let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 210, "Insurance");
+let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 100, 240, "Entertainment");
+let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 270, "Health care");

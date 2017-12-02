@@ -8,21 +8,24 @@ body {
     font-family: "Liberation Sans", sans-serif;
 }
 
-.slider {
-    position: relative;
-    background-color: #cacbcc;
-    margin: 15px 20px;
+.slider-position-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
-.slider-btn {
-    position: absolute;
-    top: 50%;
-    width: 30px;
-    height: 30px;
-    left: -15px;
-    border-radius: 50% 50%;
-    background-color: #FAFAFA;
-    transform: translateY(-50%);
+
+.slider {
+    position: relative;
+    //background-color: #cacbcc;
+/*     border-radius: 50% 50%;
+    border-width: 10px;
+    border-style: solid; */
+}
+
+.slider-ring {
+    stroke: #cacbcc;
 }
 
 .slider-row {
@@ -52,7 +55,14 @@ body {
 
 .slider-container {
     display: flex;
-    align-items: center;
+}
+
+.slider-placeholder {
+    content: " ";
+    width: 0px;
+    height: 0px;
+    position: relative;
+    display: block;
 }
 
 .slider-details {

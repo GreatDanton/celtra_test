@@ -8,22 +8,6 @@ body {
     font-family: "Liberation Sans", sans-serif;
 }
 
-.slider-position-container {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-}
-
-
-.slider {
-    position: relative;
-    //background-color: #cacbcc;
-/*     border-radius: 50% 50%;
-    border-width: 10px;
-    border-style: solid; */
-}
-
 .slider-ring {
     stroke: #cacbcc;
 }
@@ -34,7 +18,7 @@ body {
     padding: 2px 0;
 
     h2 {
-        min-width: 120px;
+        min-width: 140px;
         font-size: 50px;
         /* magic numbers so the font aligns as requested */
         height: 40px;
@@ -52,19 +36,10 @@ body {
     }
 }
 
-
 .slider-container {
     display: flex;
 }
 
-.slider-placeholder {
-    content: " ";
-    width: 0px;
-    height: 0px;
-    position: relative;
-    display: block;
-}
-
-.slider-details {
-    align-items: center;
+.slider-detailsPlaceholder {
+    align-self: center;
 }

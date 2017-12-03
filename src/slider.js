@@ -37,15 +37,17 @@ class Slider {
         this.sliderRing;
         this.fillerRing;
         this.sliderBtn;
+        this.group;
 
         // create slider and it's details/(price counter) part
-        this.svgContainer = this.createSlider();
+        //this.svgContainer = this.createSlider();
+
         // slider details (price counter) element
         this.sliderDetails = new sliderDetails(this.price, this.color, this.description);
-
+        // create slider and fill variables above with elements
+        this.createSlider();
         // add slider to specified container in constructor
-        //this.addSlider();
-        this.container.appendChild(this.svgContainer);
+        this.addSlider();
     }
 
     // addSlider inserts slider and detail (counter) to this.container specified in constructor
@@ -63,6 +65,15 @@ class Slider {
             let sliderPlaceholder = document.createElement("div");
             sliderPlaceholder.className = "slider-placeholder";
 
+            let svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svgContainer.setAttributeNS(null, "version", "1.1");
+
+            // disable right click popup when long touch occurs
+            svgContainer.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+            });
+            sliderPlaceholder.appendChild(svgContainer);
+
             sliderContainer.appendChild(detailsPlaceholder);
             sliderContainer.appendChild(sliderPlaceholder);
             this.container.appendChild(sliderContainer);
@@ -70,23 +81,29 @@ class Slider {
 
         let sliderContainer = this.container.childNodes[0];
         let childElements = sliderContainer.childNodes;
-
-        // append slider and details counter dom elements inside correct containers
+        // append slider and details counter dom elements inside correct containers, created
+        // when this function was first ran
         for (let i = 0; i < childElements.length; i++) {
             let el = childElements[i];
             if (el.className == "slider-detailsPlaceholder") {
                 el.appendChild(this.sliderDetails.createElement());
-            } else if (el.className == "slider-placeholder") {
-                let placeholderWidth = el.getBoundingClientRect().width;
 
-                if (this.radius > placeholderWidth) {
-                    el.style.width = 2 * this.radius + "px";
-                    el.style.height = 2 * this.radius + "px";
+            } else if (el.className == "slider-placeholder") {
+                let svgContainer = el.firstElementChild;
+                let svgContainerWidth = svgContainer.getAttributeNS(null, "width");
+
+                let strokeWidth = 20;
+                let sliderWidth = 30;
+                let width = 2 * (this.radius + strokeWidth + sliderWidth)
+
+                if (width > svgContainerWidth) {
+                    // viewbox (minx, miny, width, height);
+                    svgContainer.setAttributeNS(null, "viewBox", `${-width / 2} ${-width / 2} ${width} ${width}`);
+                    svgContainer.setAttributeNS(null, "width", width);
+                    svgContainer.setAttributeNS(null, "height", width);
                 }
-                let positionContainer = document.createElement("div");
-                positionContainer.className = "slider-position-container";
-                positionContainer.appendChild(this.svgContainer);
-                el.appendChild(positionContainer);
+
+                svgContainer.appendChild(this.group);
             }
         }
     }
@@ -95,19 +112,12 @@ class Slider {
     createSlider() {
         let strokeWidth = 20;
         let sliderWidth = 30;
-        let width = 2 * this.radius + strokeWidth + sliderWidth;
-
-        let svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svgContainer.setAttributeNS(null, "version", "1.1");
-        svgContainer.setAttributeNS(null, "viewBox", `${(-strokeWidth - sliderWidth) / 2} ${(-strokeWidth - sliderWidth) / 2} ${width} ${width}`);
-        svgContainer.setAttributeNS(null, "width", width);
-        svgContainer.setAttributeNS(null, "height", width);
 
         let sliderRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sliderRing.setAttributeNS(null, "r", this.radius);
         sliderRing.setAttributeNS(null, "stroke-width", strokeWidth);
-        sliderRing.setAttributeNS(null, "cx", this.radius);
-        sliderRing.setAttributeNS(null, "cy", this.radius);
+        sliderRing.setAttributeNS(null, "cx", 0);
+        sliderRing.setAttributeNS(null, "cy", 0);
         sliderRing.setAttributeNS(null, "fill-opacity", 0);
         sliderRing.setAttributeNS(null, "class", "slider-ring");
 
@@ -116,26 +126,20 @@ class Slider {
         sliderRing.setAttributeNS(null, "stroke-dasharray", `${fullChunkSize}, ${emptyChunkSize}`);
         this.sliderRing = sliderRing;
 
-        svgContainer.appendChild(sliderRing);
-
         // fills with color based on btn position
         let fillerRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         fillerRing.setAttributeNS(null, "stroke-width", strokeWidth);
         fillerRing.setAttributeNS(null, "fill-opacity", 0);
         fillerRing.setAttributeNS(null, "r", this.radius);
-        fillerRing.setAttributeNS(null, "cx", this.radius);
-        fillerRing.setAttributeNS(null, "cy", this.radius);
+        fillerRing.setAttributeNS(null, "cx", 0);
+        fillerRing.setAttributeNS(null, "cy", 0);
         fillerRing.setAttributeNS(null, "stroke", this.color);
         fillerRing.setAttributeNS(null, "stroke-opacity", 0.7);
-        // fillerRing is rotated for 90 deg counterclockwise, so it starts at the top of the circle
-        fillerRing.setAttributeNS(null, "transform", `rotate(-90 ${this.radius} ${this.radius})`);
 
         // create empty filler ring (not filled in since we start at point 0)
         fillerRing.setAttributeNS(null, "stroke-dasharray", this.circumference);
         fillerRing.setAttributeNS(null, "stroke-dashoffset", this.circumference);
         this.fillerRing = fillerRing;
-        svgContainer.appendChild(fillerRing);
-
 
         // slider touch button
         let sliderBtn = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -147,22 +151,25 @@ class Slider {
         sliderBtn.setAttributeNS(null, "cy", 0);
         sliderBtn.setAttributeNS(null, "class", "slider-btn");
         this.sliderBtn = sliderBtn;
-        svgContainer.appendChild(sliderBtn);
 
-        svgContainer.addEventListener("touchstart", this.sliderTouchStart.bind(this));
-        svgContainer.addEventListener("touchend", this.sliderTouchEnd.bind(this));
-        svgContainer.addEventListener("touchmove", this.sliderMove.bind(this));
+        let group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        // group of all elements is rotated by 90deg counter clockwise. This ensures
+        // slider btn is at the top of the circle and the step ticks start always at
+        // the top.
+        group.setAttributeNS(null, "transform", "rotate(-90 0 0)");
 
-        svgContainer.addEventListener("mousedown", this.sliderTouchStart.bind(this));
-        svgContainer.addEventListener("mouseup", this.sliderTouchEnd.bind(this));
-        svgContainer.addEventListener("mousemove", this.sliderMove.bind(this));
+        group.appendChild(sliderRing);
+        group.appendChild(fillerRing);
+        group.appendChild(sliderBtn);
 
-        // disable right click popup when long touch occurs
-        svgContainer.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-        });
+        group.addEventListener("touchstart", this.sliderTouchStart.bind(this));
+        group.addEventListener("touchend", this.sliderTouchEnd.bind(this));
+        group.addEventListener("touchmove", this.sliderMove.bind(this));
 
-        return svgContainer;
+        group.addEventListener("mousedown", this.sliderTouchStart.bind(this));
+        group.addEventListener("mouseup", this.sliderTouchEnd.bind(this));
+        group.addEventListener("mousemove", this.sliderMove.bind(this));
+        this.group = group;
     }
 
     sliderTouchStart(e) {
@@ -181,10 +188,10 @@ class Slider {
 
     sliderMove(e) {
         e.preventDefault();
-        // if drag != true early escape
         if (!this.drag) {
             return;
         }
+
         // detect mouse or touch global x,y coordinates
         let clickX;
         let clickY;
@@ -196,13 +203,16 @@ class Slider {
             clickY = e.changedTouches[0].clientY;
         }
 
+        // calculate angle of mouse click - center of circle
         let newAngle = this.calcAngle(clickX, clickY);
+
         // create sticky feeling => slider sticks to slider ring ticks/steps
         let steps = Math.round(newAngle / this.stepAngle);
         let finalAngle = Math.round(steps * this.stepAngle);
 
         // calculate new price based on the angle
         let newPrice = this.calculatePrice(finalAngle);
+        this.sliderDetails.setPrice(newPrice);
         this.price = newPrice;
 
         // fill part of the arc untill the slider button
@@ -212,8 +222,8 @@ class Slider {
 
         // update slider button position
         let newBtnPosition = this.calcNewPoints(finalAngle);
-        let newX = newBtnPosition[0] + this.radius;
-        let newY = newBtnPosition[1] + this.radius;
+        let newX = newBtnPosition[0];
+        let newY = newBtnPosition[1];
 
         this.sliderBtn.setAttributeNS(null, "cx", newX);
         this.sliderBtn.setAttributeNS(null, "cy", newY);
@@ -222,7 +232,7 @@ class Slider {
     // calculate price from slider button position
     calculatePrice(angle) {
         let steps = Math.round(angle / this.stepAngle);
-        let price = steps * this.pricePerStep;
+        let price = Math.round(steps * this.pricePerStep);
         return price;
     }
 
@@ -246,8 +256,6 @@ class Slider {
 
     // calculate new [x,y] points for sliderBtn based on the inserted angle in degrees
     calcNewPoints(angle) {
-        // rotate coordinate system so 0deg angle is at the top of the circle (ringSlider);
-        angle -= 90;
         let x = this.radius * Math.cos(angle * Math.PI / 180);
         let y = this.radius * Math.sin(angle * Math.PI / 180);
         return [x, y];
@@ -305,8 +313,8 @@ class sliderDetails {
 }
 
 let container = document.getElementById("slider-test");
-let slider1 = new Slider(container, "#70508F", [0, 1000], 50, 100, "Transportation");
-let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 180, "Food");
-let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 210, "Insurance");
-let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 500, 240, "Entertainment");
-let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 270, "Health care");
+let slider1 = new Slider(container, "#70508F", [0, 1000], 15, 50, "Transportation");
+let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 80, "Food");
+let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 110, "Insurance");
+let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 10, 140, "Entertainment");
+let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 170, "Health care");

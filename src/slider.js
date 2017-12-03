@@ -17,6 +17,7 @@ class Slider {
         this.radius = radius;
         // description text for slider details/counter
         this.description = description;
+        this.circumference = 2 * Math.PI * this.radius;
 
         // variable that is used to determine wheter the slider is being dragged
         this.drag = false;
@@ -34,6 +35,7 @@ class Slider {
         // they hold sliderRing and sliderBtn svg element for this class so we
         // can simply use them for calculations across Slider class
         this.sliderRing;
+        this.fillerRing;
         this.sliderBtn;
 
         // create slider and it's details/(price counter) part
@@ -116,6 +118,25 @@ class Slider {
 
         svgContainer.appendChild(sliderRing);
 
+        // fills with color based on btn position
+        let fillerRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        fillerRing.setAttributeNS(null, "stroke-width", strokeWidth);
+        fillerRing.setAttributeNS(null, "fill-opacity", 0);
+        fillerRing.setAttributeNS(null, "r", this.radius);
+        fillerRing.setAttributeNS(null, "cx", this.radius);
+        fillerRing.setAttributeNS(null, "cy", this.radius);
+        fillerRing.setAttributeNS(null, "stroke", this.color);
+        fillerRing.setAttributeNS(null, "stroke-opacity", 0.7);
+        // fillerRing is rotated for 90 deg counterclockwise, so it starts at the top of the circle
+        fillerRing.setAttributeNS(null, "transform", `rotate(-90 ${this.radius} ${this.radius})`);
+
+        // create empty filler ring (not filled in since we start at point 0)
+        fillerRing.setAttributeNS(null, "stroke-dasharray", this.circumference);
+        fillerRing.setAttributeNS(null, "stroke-dashoffset", this.circumference);
+        this.fillerRing = fillerRing;
+        svgContainer.appendChild(fillerRing);
+
+
         // slider touch button
         let sliderBtn = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sliderBtn.setAttributeNS(null, "r", 13);
@@ -184,7 +205,12 @@ class Slider {
         let newPrice = this.calculatePrice(finalAngle);
         this.price = newPrice;
 
+        // fill part of the arc untill the slider button
+        let arcLen = this.arcLength(finalAngle);
+        let offset = this.circumference - arcLen;
+        this.fillerRing.setAttributeNS(null, "stroke-dashoffset", offset);
 
+        // update slider button position
         let newBtnPosition = this.calcNewPoints(finalAngle);
         let newX = newBtnPosition[0] + this.radius;
         let newY = newBtnPosition[1] + this.radius;
@@ -202,7 +228,6 @@ class Slider {
 
     // calculate angle between (pointX, pointY), center point of the
     // ringSlider (circle) and top most point which represent 0 degrees.
-    // We are using polar coordinate system to calculate the angle between the points
     calcAngle(pointX, pointY) {
         let dimensions = this.sliderRing.getBoundingClientRect();
         let cx = dimensions.left + (dimensions.width / 2);
@@ -226,6 +251,12 @@ class Slider {
         let x = this.radius * Math.cos(angle * Math.PI / 180);
         let y = this.radius * Math.sin(angle * Math.PI / 180);
         return [x, y];
+    }
+
+    // calculate length of the arc for the chosen angle
+    arcLength(angle) {
+        let length = angle * Math.PI * this.radius / 180;
+        return length;
     }
 }
 
@@ -277,5 +308,5 @@ let container = document.getElementById("slider-test");
 let slider1 = new Slider(container, "#70508F", [0, 1000], 50, 100, "Transportation");
 let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 180, "Food");
 let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 210, "Insurance");
-let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 100, 240, "Entertainment");
+let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 500, 240, "Entertainment");
 let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 270, "Health care");

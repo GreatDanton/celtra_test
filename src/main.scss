@@ -7,7 +7,7 @@
 body {
     font-family: "Liberation Sans", sans-serif;
     background: linear-gradient(top, #F0F0F0 , #EDEDED 50%, #CACBCD);
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .slider-container {
@@ -38,9 +38,12 @@ body {
     padding: 2px 0;
 
     h2 {
-        min-width: 140px;
+        // magic number for numbers 0..999
+        // if number is bigger than 1000 min-width should be increased (to 140)
+        // otherwise it would shift content to the right for one character width
+        min-width: 115px;
         font-size: 50px;
-        /* magic numbers so the font aligns as requested */
+        /* magic numbers so the font aligns as requested per image*/
         height: 40px;
         line-height: 50px;
     }

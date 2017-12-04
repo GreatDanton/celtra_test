@@ -179,11 +179,27 @@ class Slider {
         let sliderBtn = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sliderBtn.setAttributeNS(null, "r", 13);
         sliderBtn.setAttributeNS(null, "stroke-width", 1);
-        sliderBtn.setAttributeNS(null, "stroke", this.color);
-        sliderBtn.setAttributeNS(null, "fill", "#fafafa");
+        sliderBtn.setAttributeNS(null, "stroke", "#CBCBCC");
         sliderBtn.setAttributeNS(null, "cx", this.radius);
         sliderBtn.setAttributeNS(null, "cy", 0);
         sliderBtn.setAttributeNS(null, "class", "slider-btn");
+
+        // add gradient to button
+        let gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        gradient.setAttributeNS(null, "id", "grad");
+        let stops = [
+            { "color": "#DDDEDF", "offset": "0%" }, // dark at bottom
+            { "color": "#ECEDEE", "offset": "30%" },
+            { "color": "#F8F8F8", "offset": "80%" } // light at top
+        ];
+        for (let i = 0; i < stops.length; i++) {
+            console.log(stops[i].offset);
+            let stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            stop.setAttributeNS(null, "offset", stops[i].offset);
+            stop.setAttributeNS(null, "stop-color", stops[i].color);
+            gradient.appendChild(stop);
+        }
+        sliderBtn.setAttributeNS(null, "fill", "url(#grad)");
         this.sliderBtn = sliderBtn;
 
         let group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -195,6 +211,7 @@ class Slider {
         group.appendChild(sliderRing);
         group.appendChild(fillerRing);
         group.appendChild(sliderBtn);
+        group.appendChild(gradient);
 
         // touch clicks event listeners
         group.addEventListener("touchstart", this.sliderTouchStart.bind(this));

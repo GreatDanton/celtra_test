@@ -1,8 +1,9 @@
 'use strict';
 
+// Slider class used to create new Slider component out of specified arguments
+// in class constructor in the chosen container
 class Slider {
-    // inputs:
-    // container - html id
+    // container - dom element
     // color - #hex
     // range - [min value, max value]
     // step - integer (1)
@@ -30,6 +31,10 @@ class Slider {
         this.price = this.minVal;
         // Used for calculating price based on the slider button position
         this.pricePerStep = (this.maxVal - this.minVal) / this.numOfSteps;
+        // lastPrice holds the last value the slider had. This number is used
+        // to determine wheter we are allowed to slide past end (from minVal to maxVal
+        // and vice-versa). See sliderMove function for the actual implementation
+        this.lastAngle = 0;
 
         // sliderRing and sliderBtn are set up while constructing slider svg
         // they hold sliderRing and sliderBtn svg element for this class so we
@@ -66,7 +71,6 @@ class Slider {
             let sliderPlaceholder = document.createElement("div");
             sliderPlaceholder.className = "slider-placeholder";
 
-
             let svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svgContainer.setAttributeNS(null, "version", "1.1");
             // disable right click popup when long touch occurs
@@ -75,6 +79,7 @@ class Slider {
             });
             sliderPlaceholder.appendChild(svgContainer);
 
+            // add text below the sliders
             let textholder = document.createElement("p");
             textholder.innerText = "Adjust dial to enter expenses";
             sliderPlaceholder.appendChild(textholder);
@@ -101,16 +106,19 @@ class Slider {
         let svgContainer = sliderPlaceholder.firstElementChild;
         let svgContainerWidth = svgContainer.getAttributeNS(null, "width");
 
+        // calculate the width of svg container, if this is not performed
+        // svg will cutoff part of the slider circles
         let width = 2 * this.radius + 2 * this.strokeWidth;
         let detailsElement = this.sliderDetails.createElement();
 
         // if the slider that is being added is bigger than the current width of the
         // svg container, change viewbox (so the sliders are always centered)
-        //  and width & height
+        // and width & height of svgContainer
         //
         // group <g> tags should be located in svgContainer in descending order. The
-        // biggest sliders should ba at the front of the node array otherwise smaller
-        // sliders (smaller <g> group) can not be clicked. Svg z-index works
+        // biggest sliders should be at the front of the node array otherwise smaller
+        // sliders (smaller <g> group) can not be clicked. Svg 'z-index' works like:
+        // last item added has the biggest 'z-index';
         if (width > svgContainerWidth) {
             // viewbox (minx, miny, width, height);
             svgContainer.setAttributeNS(null, "viewBox", `${-width / 2} ${-width / 2} ${width} ${width}`);
@@ -143,17 +151,19 @@ class Slider {
     }
 
 
-    // create slider dom element
+    // create slider svg group element that could be embedded inside svg container.
+    // All elements fills in class variables, that could be reused across other functions
+    // for easier manipulation
     createSlider() {
         this.strokeWidth = 20;
 
         let sliderRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sliderRing.setAttributeNS(null, "r", this.radius);
         sliderRing.setAttributeNS(null, "stroke-width", this.strokeWidth);
+        sliderRing.setAttributeNS(null, "stroke", "#cacbcc");
         sliderRing.setAttributeNS(null, "cx", 0);
         sliderRing.setAttributeNS(null, "cy", 0);
         sliderRing.setAttributeNS(null, "fill-opacity", 0);
-        sliderRing.setAttributeNS(null, "class", "slider-ring");
 
         let emptyChunkSize = 2;
         let fullChunkSize = (2 * Math.PI * this.radius - emptyChunkSize * this.numOfSteps) / this.numOfSteps;
@@ -175,16 +185,16 @@ class Slider {
         fillerRing.setAttributeNS(null, "stroke-dashoffset", this.circumference);
         this.fillerRing = fillerRing;
 
-        // slider touch button
+        // create slider touch button
         let sliderBtn = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        sliderBtn.setAttributeNS(null, "r", 13);
+        sliderBtn.setAttributeNS(null, "r", 12);
         sliderBtn.setAttributeNS(null, "stroke-width", 1);
         sliderBtn.setAttributeNS(null, "stroke", "#CBCBCC");
         sliderBtn.setAttributeNS(null, "cx", this.radius);
         sliderBtn.setAttributeNS(null, "cy", 0);
         sliderBtn.setAttributeNS(null, "class", "slider-btn");
 
-        // add gradient to button
+        // create gradient element; add gradient to slider button
         let gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
         gradient.setAttributeNS(null, "id", "grad");
         let stops = [
@@ -193,7 +203,6 @@ class Slider {
             { "color": "#F8F8F8", "offset": "80%" } // light at top
         ];
         for (let i = 0; i < stops.length; i++) {
-            console.log(stops[i].offset);
             let stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
             stop.setAttributeNS(null, "offset", stops[i].offset);
             stop.setAttributeNS(null, "stop-color", stops[i].color);
@@ -233,6 +242,9 @@ class Slider {
         // prevents zoom-in on double touch
         e.preventDefault();
         this.drag = true;
+        // this is used to determine between clicks and drags. Drag around the slider
+        // is disabled, while clicking from min to max value is allowed
+        this.lastAngle = -1;
         this.sliderMove(e);
     }
 
@@ -241,6 +253,7 @@ class Slider {
         this.drag = false;
     }
 
+    // fires when the slider button is moved (drag or click)
     sliderMove(e) {
         e.preventDefault();
         if (!this.drag) {
@@ -261,9 +274,22 @@ class Slider {
         // calculate angle of mouse click - center of circle
         let newAngle = this.calcAngle(clickX, clickY);
 
+        // this disables jumping from maxVal to minVal while dragging slider
+        // If we are draggin past the30 deg the slider jumps normally. Click
+        // on slider ring works normally (it's not disabled).
+        if (this.lastAngle > 330 && newAngle < 30) {
+            return;
+        }
+
+        // disables jumping from minVal to maxVal when dragging slider
+        if (this.lastAngle < 30 && newAngle > 330) {
+            return;
+        }
+
         // create sticky feeling => slider sticks to slider ring ticks/steps
         let steps = Math.round(newAngle / this.stepAngle);
         let finalAngle = Math.round(steps * this.stepAngle);
+        this.lastAngle = finalAngle;
 
         // calculate new price based on the angle
         let newPrice = this.calculatePrice(finalAngle);
@@ -285,6 +311,9 @@ class Slider {
     }
 
     // calculate price from slider button position
+    //
+    // input: angle - degrees (int)
+    // output: price/expenses based on the input angle (int)
     calculatePrice(angle) {
         let steps = Math.round(angle / this.stepAngle);
         let price = Math.round(steps * this.pricePerStep);
@@ -293,6 +322,9 @@ class Slider {
 
     // calculate angle between (pointX, pointY), center point of the
     // ringSlider (circle) and top most point which represent 0 degrees.
+    //
+    // input: pointX - x coordinate (int); pointY - y coordinate (int)
+    // output: angle in degrees (positive int)
     calcAngle(pointX, pointY) {
         let dimensions = this.sliderRing.getBoundingClientRect();
         let cx = dimensions.left + (dimensions.width / 2);
@@ -302,14 +334,17 @@ class Slider {
         let dy = pointY - cy;
         // returns angle in degrees. + 90 is added to rotate coordinate system
         // so 0deg angle is at the top of the circle.
-        let deg = Math.atan2(dy, dx) * 180 / Math.PI + 90;
-        if (deg < 0) {
-            deg += 360;
+        let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+        if (angle < 0) {
+            angle += 360;
         }
-        return deg;
+        return angle;
     }
 
     // calculate new [x,y] points for sliderBtn based on the inserted angle in degrees
+    //
+    // input: angle - degrees (int)
+    // output: point coordinates [x coordinate, y coordinate] (int, int)
     calcNewPoints(angle) {
         let x = this.radius * Math.cos(angle * Math.PI / 180);
         let y = this.radius * Math.sin(angle * Math.PI / 180);
@@ -317,6 +352,9 @@ class Slider {
     }
 
     // calculate length of the arc for the chosen angle
+    //
+    // input: angle - degrees (int)
+    // output: length of the arc for that angle (from 0 to angle) (int)
     arcLength(angle) {
         let length = angle * Math.PI * this.radius / 180;
         return length;
@@ -324,9 +362,11 @@ class Slider {
 }
 
 
+// sliderDetails class is used to create price counter for each slider
+// and updating the price of the counter dom element
 class sliderDetails {
     // price - int
-    // color - #hexNum
+    // color - "#hexNum"
     // description - string (ie: Transportation)
     constructor(price, color, description) {
         this.price = price;
@@ -361,6 +401,7 @@ class sliderDetails {
     }
 
     // call setPrice() on class instance to change value of h1 price html tag
+    // input: - price (int)
     setPrice(price) {
         this.price = price;
         this.priceElement.innerHTML = "$" + this.price;
@@ -369,7 +410,7 @@ class sliderDetails {
 
 let container = document.getElementById("slider-test");
 let slider1 = new Slider(container, "#DC5748", [0, 999], 15, 50, "Health care");
-let slider2 = new Slider(container, "#DD8F2E", [0, 999], 10, 80, "Food");
+let slider2 = new Slider(container, "#DD8F2E", [0, 999], 10, 80, "Entertainment");
 let slider3 = new Slider(container, "#4E961E", [0, 999], 10, 110, "Insurance");
-let slider4 = new Slider(container, "#1D8FC4", [0, 999], 10, 140, "Entertainment");
+let slider4 = new Slider(container, "#1D8FC4", [0, 999], 10, 140, "Food");
 let slider5 = new Slider(container, "#70508F", [0, 999], 10, 170, "Transportation");

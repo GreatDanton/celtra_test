@@ -10,14 +10,17 @@ body {
     min-height: 100vh;
 }
 
+// main container that holds price counter and sliders
 .slider-container {
     display: flex;
 }
 
+// container for price counter
 .slider-detailsPlaceholder {
     align-self: center;
 }
 
+// container for svg sliders
 .slider-placeholder {
     p {
         font-size: 10px;
@@ -28,10 +31,7 @@ body {
     }
 }
 
-.slider-ring {
-    stroke: #cacbcc;
-}
-
+// one row in slider-detailsPlaceholder (price counter)
 .slider-row {
     display: flex;
     align-items: flex-end;

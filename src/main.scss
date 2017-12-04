@@ -18,6 +18,16 @@ body {
     align-self: center;
 }
 
+.slider-placeholder {
+    p {
+        font-size: 10px;
+        text-align: center;
+        text-transform: uppercase;
+        font-style: italic;
+        font-weight: bold;
+    }
+}
+
 .slider-ring {
     stroke: #cacbcc;
 }

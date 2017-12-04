@@ -66,6 +66,7 @@ class Slider {
             let sliderPlaceholder = document.createElement("div");
             sliderPlaceholder.className = "slider-placeholder";
 
+
             let svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svgContainer.setAttributeNS(null, "version", "1.1");
             // disable right click popup when long touch occurs
@@ -74,6 +75,11 @@ class Slider {
             });
             sliderPlaceholder.appendChild(svgContainer);
 
+            let textholder = document.createElement("p");
+            textholder.innerText = "Adjust dial to enter expenses";
+            sliderPlaceholder.appendChild(textholder);
+
+            // appending slider-placeholder element to main slider-container
             sliderContainer.appendChild(sliderPlaceholder);
             // appending whole sliderContainer to the chosen dom element
             this.container.appendChild(sliderContainer);

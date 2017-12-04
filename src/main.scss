@@ -6,6 +6,16 @@
 
 body {
     font-family: "Liberation Sans", sans-serif;
+    background: linear-gradient(top, #F0F0F0 , #EDEDED 50%, #CACBCD);
+    height: 100vh;
+}
+
+.slider-container {
+    display: flex;
+}
+
+.slider-detailsPlaceholder {
+    align-self: center;
 }
 
 .slider-ring {
@@ -34,12 +44,4 @@ body {
     p {
         font-size: 12px;
     }
-}
-
-.slider-container {
-    display: flex;
-}
-
-.slider-detailsPlaceholder {
-    align-self: center;
 }

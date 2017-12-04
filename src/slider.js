@@ -1,14 +1,21 @@
 'use strict';
 
-// Slider class used to create new Slider component out of specified arguments
-// in class constructor in the chosen container
+// Slider class is used to create new Slider component out of constructor arguments.
+// The provided container dom element should be empty. Slider class automatically
+// creates containers that holds sliders and their relevant price counters
+//
+
+// example:
+// let container  = document.getElementById('myId');
+// let slider1 = new Slider(container, "#ccc", [0, 100], 10, 150, "Books");
 class Slider {
     // container - dom element
-    // color - #hex
-    // range - [min value, max value]
-    // step - integer (1)
-    // radius - in px; integer
-    // description - text that will be shown in details on the left of the slider
+    // color - '#hex'
+    // range - [min value, max value] (int, int)
+    // step - step width (int)
+    // radius - radius of slider in px (int)
+    // description - text that will be shown in details/price counter on the
+    //               left of the slider
     constructor(container, color, range, step, radius, description) {
         this.container = container;
         this.color = color;
@@ -47,15 +54,15 @@ class Slider {
         this.strokeWidth;
 
         // slider details (price counter) element
-        this.sliderDetails = new sliderDetails(this.price, this.color, this.description);
+        this.sliderPriceCounter = new sliderPriceCounter(this.price, this.color, this.description);
         // create slider and fill variables above with elements
         this.createSlider();
         // add slider to specified container in constructor
         this.addSlider();
     }
 
-    // addSlider inserts slider and slider detail(price counter) to this.container
-    // specified in constructor with custom div parent elements used for easier positioning
+    // addSlider inserts slider and it's price counter  to this.container specified in
+    // constructor with custom div parent elements used for easier positioning
     addSlider() {
         // if the svgContainer is empty (slider is being added for the first time)
         // the necessary containers should be added to the dom tree first
@@ -109,7 +116,7 @@ class Slider {
         // calculate the width of svg container, if this is not performed
         // svg will cutoff part of the slider circles
         let width = 2 * this.radius + 2 * this.strokeWidth;
-        let detailsElement = this.sliderDetails.createElement();
+        let detailsElement = this.sliderPriceCounter.createElement();
 
         // if the slider that is being added is bigger than the current width of the
         // svg container, change viewbox (so the sliders are always centered)
@@ -295,7 +302,7 @@ class Slider {
 
         // calculate new price based on the angle
         let newPrice = this.calculatePrice(finalAngle);
-        this.sliderDetails.setPrice(newPrice);
+        this.sliderPriceCounter.setPrice(newPrice);
         this.price = newPrice;
 
         // fill part of the arc untill the slider button
@@ -364,9 +371,9 @@ class Slider {
 }
 
 
-// sliderDetails class is used to create price counter for each slider
-// and updating the price of the counter dom element
-class sliderDetails {
+// sliderPriceCounter class is used to create price counter for each slider.
+// It contains function for updating the price of the counter dom element.
+class sliderPriceCounter {
     // price - int
     // color - "#hexNum"
     // description - string (ie: Transportation)
@@ -381,8 +388,8 @@ class sliderDetails {
 
     // create dom element with data from constructor arguments
     createElement() {
-        let sliderDetails = document.createElement("div");
-        sliderDetails.className = "slider-row";
+        let sliderPriceCounter = document.createElement("div");
+        sliderPriceCounter.className = "slider-row";
 
         let price = document.createElement("h2");
         price.innerHTML = "$" + this.price;
@@ -395,11 +402,11 @@ class sliderDetails {
         let description = document.createElement("p");
         description.innerHTML = this.description;
 
-        sliderDetails.appendChild(price);
-        sliderDetails.appendChild(backgroundColor);
-        sliderDetails.appendChild(description);
+        sliderPriceCounter.appendChild(price);
+        sliderPriceCounter.appendChild(backgroundColor);
+        sliderPriceCounter.appendChild(description);
 
-        return sliderDetails;
+        return sliderPriceCounter;
     }
 
     // call setPrice() on class instance to change value of h1 price html tag

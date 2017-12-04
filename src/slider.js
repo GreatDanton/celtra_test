@@ -38,6 +38,8 @@ class Slider {
         this.fillerRing;
         this.sliderBtn;
         this.group;
+        // width of the slider stroke (colored ring part)
+        this.strokeWidth;
 
         // slider details (price counter) element
         this.sliderDetails = new sliderDetails(this.price, this.color, this.description);
@@ -77,68 +79,71 @@ class Slider {
             this.container.appendChild(sliderContainer);
         }
 
-        let sliderContainer = this.container.childNodes[0];
-        let childElements = sliderContainer.childNodes;
-
-        // append slider and details counter dom elements inside their correct container
-        for (let i = 0; i < childElements.length; i++) {
-            let el = childElements[i];
+        let sliderContainerNodes = this.container.childNodes[0].childNodes;
+        let detailsPlaceholder;
+        let sliderPlaceholder;
+        for (let i = 0; i < sliderContainerNodes.length; i++) {
+            let el = sliderContainerNodes[i];
             if (el.className == "slider-detailsPlaceholder") {
-                el.appendChild(this.sliderDetails.createElement());
-
+                detailsPlaceholder = el;
             } else if (el.className == "slider-placeholder") {
-                let svgContainer = el.firstElementChild;
-                let svgContainerWidth = svgContainer.getAttributeNS(null, "width");
-
-                let strokeWidth = 20;
-                let sliderWidth = 30;
-                let width = 2 * this.radius + sliderWidth;
-
-                // if the slider that is being added is bigger than the current width of the
-                // svg container, change viewbox (so the sliders are always centered)
-                //  and width & height
-                //
-                // group <g> tags should be located in svgContainer in descending order. The
-                // biggest sliders should ba at the front of the node array otherwise smaller
-                // sliders (smaller <g> group) can not be clicked. Svg z-index works
-                if (width > svgContainerWidth) {
-                    // viewbox (minx, miny, width, height);
-                    svgContainer.setAttributeNS(null, "viewBox", `${-width / 2} ${-width / 2} ${width} ${width}`);
-                    svgContainer.setAttributeNS(null, "width", width);
-                    svgContainer.setAttributeNS(null, "height", width);
-
-                    // insert before the first <g> tag in svgContainer. The biggest sliders
-                    // should be at the front otherwise we can not click on the smaller sliders
-                    svgContainer.insertBefore(this.group, svgContainer.firstElementChild);
-                    return;
-                }
-
-                // if the slider width is in between smallest and biggest slider in the array
-                // find his exact position and insert it into the container
-                let otherSlidersArr = svgContainer.childNodes;
-                for (let i = 0; i < otherSlidersArr.length; i++) {
-                    let slider = otherSlidersArr[i];
-                    let sliderWidth = slider.getBoundingClientRect().width;
-                    if (width > sliderWidth) {
-                        svgContainer.insertBefore(this.group, slider);
-                        return;
-                    }
-                }
-
-                // if the current slider is the smallest one in the svgContainer, append it to svg container
-                svgContainer.appendChild(this.group);
+                sliderPlaceholder = el;
             }
         }
+
+        // append slider and details counter dom elements inside their correct container
+        let svgContainer = sliderPlaceholder.firstElementChild;
+        let svgContainerWidth = svgContainer.getAttributeNS(null, "width");
+
+        let width = 2 * this.radius + 2 * this.strokeWidth;
+        let detailsElement = this.sliderDetails.createElement();
+
+        // if the slider that is being added is bigger than the current width of the
+        // svg container, change viewbox (so the sliders are always centered)
+        //  and width & height
+        //
+        // group <g> tags should be located in svgContainer in descending order. The
+        // biggest sliders should ba at the front of the node array otherwise smaller
+        // sliders (smaller <g> group) can not be clicked. Svg z-index works
+        if (width > svgContainerWidth) {
+            // viewbox (minx, miny, width, height);
+            svgContainer.setAttributeNS(null, "viewBox", `${-width / 2} ${-width / 2} ${width} ${width}`);
+            svgContainer.setAttributeNS(null, "width", width);
+            svgContainer.setAttributeNS(null, "height", width);
+
+            // insert before the first <g> tag in svgContainer. The biggest sliders
+            // should be at the front otherwise we can not click on the smaller sliders
+            svgContainer.insertBefore(this.group, svgContainer.firstElementChild);
+            detailsPlaceholder.insertBefore(detailsElement, detailsPlaceholder.firstElementChild)
+            return;
+        }
+
+        // if the slider width is in between smallest and biggest slider in the node array
+        // find its exact position and insert it into the svgContainer
+        let otherSlidersArr = svgContainer.childNodes;
+        for (let i = 0; i < otherSlidersArr.length; i++) {
+            let slider = otherSlidersArr[i];
+            let sliderWidth = slider.getBoundingClientRect().width;
+            if (width > sliderWidth) {
+                svgContainer.insertBefore(this.group, slider);
+                detailsPlaceholder(detailsElement, detailsPlaceholder.childNodes[i]);
+                return;
+            }
+        }
+
+        // if the current slider is the smallest one in the svgContainer, append it to svg container
+        svgContainer.appendChild(this.group);
+        detailsPlaceholder.appendChild(detailsElement);
     }
+
 
     // create slider dom element
     createSlider() {
-        let strokeWidth = 20;
-        let sliderWidth = 30;
+        this.strokeWidth = 20;
 
         let sliderRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sliderRing.setAttributeNS(null, "r", this.radius);
-        sliderRing.setAttributeNS(null, "stroke-width", strokeWidth);
+        sliderRing.setAttributeNS(null, "stroke-width", this.strokeWidth);
         sliderRing.setAttributeNS(null, "cx", 0);
         sliderRing.setAttributeNS(null, "cy", 0);
         sliderRing.setAttributeNS(null, "fill-opacity", 0);
@@ -151,13 +156,13 @@ class Slider {
 
         // fills with color based on btn position
         let fillerRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        fillerRing.setAttributeNS(null, "stroke-width", strokeWidth);
+        fillerRing.setAttributeNS(null, "stroke-width", this.strokeWidth);
         fillerRing.setAttributeNS(null, "fill-opacity", 0);
         fillerRing.setAttributeNS(null, "r", this.radius);
         fillerRing.setAttributeNS(null, "cx", 0);
         fillerRing.setAttributeNS(null, "cy", 0);
         fillerRing.setAttributeNS(null, "stroke", this.color);
-        fillerRing.setAttributeNS(null, "stroke-opacity", 0.7);
+        fillerRing.setAttributeNS(null, "stroke-opacity", 0.8);
 
         // create empty filler ring (not filled in since we start at point 0)
         fillerRing.setAttributeNS(null, "stroke-dasharray", this.circumference);
@@ -185,13 +190,19 @@ class Slider {
         group.appendChild(fillerRing);
         group.appendChild(sliderBtn);
 
+        // touch clicks event listeners
         group.addEventListener("touchstart", this.sliderTouchStart.bind(this));
         group.addEventListener("touchend", this.sliderTouchEnd.bind(this));
         group.addEventListener("touchmove", this.sliderMove.bind(this));
 
+        // mouse clicks event listeners
         group.addEventListener("mousedown", this.sliderTouchStart.bind(this));
-        group.addEventListener("mouseup", this.sliderTouchEnd.bind(this));
-        group.addEventListener("mousemove", this.sliderMove.bind(this));
+        // if the mouse goes outside the group container the events on group element
+        // would not fire. This problem is fixed with event listener on group being
+        //replaced with event on document
+        document.addEventListener("mouseup", this.sliderTouchEnd.bind(this));
+        document.addEventListener("mousemove", this.sliderMove.bind(this));
+
         this.group = group;
     }
 
@@ -199,14 +210,12 @@ class Slider {
         // prevents zoom-in on double touch
         e.preventDefault();
         this.drag = true;
-        console.log("Touch start " + this.color);
         this.sliderMove(e);
     }
 
     sliderTouchEnd(e) {
         e.preventDefault();
         this.drag = false;
-        console.log("Touch end");
     }
 
     sliderMove(e) {
@@ -336,8 +345,8 @@ class sliderDetails {
 }
 
 let container = document.getElementById("slider-test");
-let slider1 = new Slider(container, "#70508F", [0, 999], 15, 50, "Transportation");
-let slider2 = new Slider(container, "#1D8FC4", [0, 999], 10, 80, "Food");
-let slider3 = new Slider(container, "#609F36", [0, 999], 10, 110, "Insurance");
-let slider4 = new Slider(container, "#DD8F2E", [0, 999], 10, 140, "Entertainment");
-let slider5 = new Slider(container, "#DA5648", [0, 999], 10, 170, "Health care");
+let slider1 = new Slider(container, "#DC5748", [0, 999], 15, 50, "Health care");
+let slider2 = new Slider(container, "#DD8F2E", [0, 999], 10, 80, "Food");
+let slider3 = new Slider(container, "#4E961E", [0, 999], 10, 110, "Insurance");
+let slider4 = new Slider(container, "#1D8FC4", [0, 999], 10, 140, "Entertainment");
+let slider5 = new Slider(container, "#70508F", [0, 999], 10, 170, "Transportation");

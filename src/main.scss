@@ -5,7 +5,7 @@
 }
 
 body {
-    font-family: "Liberation Sans", sans-serif;
+    font-family: "Arimo", sans-serif;
     background: linear-gradient(top, #F0F0F0 , #EDEDED 50%, #CACBCD);
     min-height: 100vh;
 }
@@ -24,7 +24,7 @@ body {
         text-align: center;
         text-transform: uppercase;
         font-style: italic;
-        font-weight: bold;
+        font-weight: 700;
     }
 }
 
@@ -44,7 +44,7 @@ body {
         min-width: 115px;
         font-size: 50px;
         /* magic numbers so the font aligns as requested per image*/
-        height: 40px;
+        height: 43px;
         line-height: 50px;
     }
 

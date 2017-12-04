@@ -1,10 +1,9 @@
 'use strict';
 
 // Slider class is used to create new Slider component out of constructor arguments.
-// The provided container dom element should be empty. Slider class automatically
-// creates containers that holds sliders and their relevant price counters
+// The provided container dom element should be empty, since Slider class automatically
+// creates containers that holds sliders and their relevant price counters.
 //
-
 // example:
 // let container  = document.getElementById('myId');
 // let slider1 = new Slider(container, "#ccc", [0, 100], 10, 150, "Books");

@@ -1,5 +1,8 @@
 # Celtra test - circular slider
 
+# [LIVE EXAMPLE](http://greatdanton.github.com/celtra_test/src/index.html)
+
+
 Create reusable circular slider class in javascript (as shown in image below). Make sure to optimize the code for mobile performance.
 
 

@@ -277,13 +277,15 @@ class Slider {
         // this disables jumping from maxVal to minVal while dragging slider
         // If we are draggin past the30 deg the slider jumps normally. Click
         // on slider ring works normally (it's not disabled).
-        if (this.lastAngle > 330 && newAngle < 30) {
-            return;
-        }
+        if (this.lastAngle != -1) { // when lastAngle == -1 a click/touch occured
+            if (this.lastAngle > 330 && newAngle < 30) {
+                return;
+            }
 
-        // disables jumping from minVal to maxVal when dragging slider
-        if (this.lastAngle < 30 && newAngle > 330) {
-            return;
+            // disables jumping from minVal to maxVal when dragging slider
+            if (this.lastAngle < 30 && newAngle > 330) {
+                return;
+            }
         }
 
         // create sticky feeling => slider sticks to slider ring ticks/steps

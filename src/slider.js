@@ -39,9 +39,6 @@ class Slider {
         this.sliderBtn;
         this.group;
 
-        // create slider and it's details/(price counter) part
-        //this.svgContainer = this.createSlider();
-
         // slider details (price counter) element
         this.sliderDetails = new sliderDetails(this.price, this.color, this.description);
         // create slider and fill variables above with elements
@@ -50,39 +47,40 @@ class Slider {
         this.addSlider();
     }
 
-    // addSlider inserts slider and detail (counter) to this.container specified in constructor
-    // with custom div parent elements used for styling
+    // addSlider inserts slider and slider detail(price counter) to this.container
+    // specified in constructor with custom div parent elements used for easier positioning
     addSlider() {
-        // if we are importing slider component inside container for the first time, we
-        // would like to add slider-details and slider-placeholder dom elements first.
+        // if the svgContainer is empty (slider is being added for the first time)
+        // the necessary containers should be added to the dom tree first
         if (this.container.childElementCount == 0) {
             let sliderContainer = document.createElement("div");
             sliderContainer.className = "slider-container";
 
             let detailsPlaceholder = document.createElement("div");
             detailsPlaceholder.className = "slider-detailsPlaceholder";
+            sliderContainer.appendChild(detailsPlaceholder);
 
+            // adding svg container inside slider-placeholder
             let sliderPlaceholder = document.createElement("div");
             sliderPlaceholder.className = "slider-placeholder";
 
             let svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svgContainer.setAttributeNS(null, "version", "1.1");
-
             // disable right click popup when long touch occurs
             svgContainer.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
             });
             sliderPlaceholder.appendChild(svgContainer);
 
-            sliderContainer.appendChild(detailsPlaceholder);
             sliderContainer.appendChild(sliderPlaceholder);
+            // appending whole sliderContainer to the chosen dom element
             this.container.appendChild(sliderContainer);
         }
 
         let sliderContainer = this.container.childNodes[0];
         let childElements = sliderContainer.childNodes;
-        // append slider and details counter dom elements inside correct containers, created
-        // when this function was first ran
+
+        // append slider and details counter dom elements inside their correct container
         for (let i = 0; i < childElements.length; i++) {
             let el = childElements[i];
             if (el.className == "slider-detailsPlaceholder") {
@@ -94,15 +92,40 @@ class Slider {
 
                 let strokeWidth = 20;
                 let sliderWidth = 30;
-                let width = 2 * (this.radius + strokeWidth + sliderWidth)
+                let width = 2 * this.radius + sliderWidth;
 
+                // if the slider that is being added is bigger than the current width of the
+                // svg container, change viewbox (so the sliders are always centered)
+                //  and width & height
+                //
+                // group <g> tags should be located in svgContainer in descending order. The
+                // biggest sliders should ba at the front of the node array otherwise smaller
+                // sliders (smaller <g> group) can not be clicked. Svg z-index works
                 if (width > svgContainerWidth) {
                     // viewbox (minx, miny, width, height);
                     svgContainer.setAttributeNS(null, "viewBox", `${-width / 2} ${-width / 2} ${width} ${width}`);
                     svgContainer.setAttributeNS(null, "width", width);
                     svgContainer.setAttributeNS(null, "height", width);
+
+                    // insert before the first <g> tag in svgContainer. The biggest sliders
+                    // should be at the front otherwise we can not click on the smaller sliders
+                    svgContainer.insertBefore(this.group, svgContainer.firstElementChild);
+                    return;
                 }
 
+                // if the slider width is in between smallest and biggest slider in the array
+                // find his exact position and insert it into the container
+                let otherSlidersArr = svgContainer.childNodes;
+                for (let i = 0; i < otherSlidersArr.length; i++) {
+                    let slider = otherSlidersArr[i];
+                    let sliderWidth = slider.getBoundingClientRect().width;
+                    if (width > sliderWidth) {
+                        svgContainer.insertBefore(this.group, slider);
+                        return;
+                    }
+                }
+
+                // if the current slider is the smallest one in the svgContainer, append it to svg container
                 svgContainer.appendChild(this.group);
             }
         }
@@ -313,8 +336,8 @@ class sliderDetails {
 }
 
 let container = document.getElementById("slider-test");
-let slider1 = new Slider(container, "#70508F", [0, 1000], 15, 50, "Transportation");
-let slider2 = new Slider(container, "#1D8FC4", [0, 1000], 10, 80, "Food");
-let slider3 = new Slider(container, "#609F36", [0, 1000], 10, 110, "Insurance");
-let slider4 = new Slider(container, "#DD8F2E", [0, 1000], 10, 140, "Entertainment");
-let slider5 = new Slider(container, "#DA5648", [0, 1000], 10, 170, "Health care");
+let slider1 = new Slider(container, "#70508F", [0, 999], 15, 50, "Transportation");
+let slider2 = new Slider(container, "#1D8FC4", [0, 999], 10, 80, "Food");
+let slider3 = new Slider(container, "#609F36", [0, 999], 10, 110, "Insurance");
+let slider4 = new Slider(container, "#DD8F2E", [0, 999], 10, 140, "Entertainment");
+let slider5 = new Slider(container, "#DA5648", [0, 999], 10, 170, "Health care");
